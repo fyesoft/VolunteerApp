@@ -7,6 +7,7 @@ import DonateScreen from '../screens/DonateScreen';
 import VideosScreen from '../screens/VideosScreen';
 import VolunteerScreen from '../screens/VolunteerScreen';
 import CreateProjectScreen from '../screens/CreateProjectScreen';
+import ProjectScreen from '../screens/ProjectScreen';
 
 const VolunteerNavigator = createStackNavigator({
     Volunteer: {screen: VolunteerScreen},
@@ -15,6 +16,9 @@ const VolunteerNavigator = createStackNavigator({
         navigationOptions: () => ({
             title: 'Create Project'
         })
+    },
+    Project: {
+        screen: ProjectScreen
     }
 },{
     initialRouteName: 'Volunteer',

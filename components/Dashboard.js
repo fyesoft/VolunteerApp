@@ -59,11 +59,11 @@ export default class Dashboard extends Component {
 
   componentWillMount() {
     LayoutAnimation.easeInEaseOut();
-    this.fetchProjects();
   }
 
-  componentDidMount() {
-    //console.log(this.state.currentProjects);
+  async componentDidMount() {
+    console.log(this.state.currentProjects);
+    this.fetchProjects();
   }
 
   componentWillUnmount() {
@@ -110,11 +110,9 @@ export default class Dashboard extends Component {
 
   keyExtractor = (item, index) => item.index;
 
-  renderItem({ item }) {
-    return (
-      <Project project={item} />
-    );
-  }
+  renderItem = ({ item }) => (
+    <Project project={item} key={item.index}/>
+  )
 
   renderCreateButton() {
     if (this.state.isAuthorized) {
@@ -320,7 +318,7 @@ const styles = StyleSheet.create({
     width: '90%',
     marginBottom: 0,
     marginTop: 0,
-    padding : 0,
+    padding: 0,
   },
   inputTitle: {
     flex: 0.4,
