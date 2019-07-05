@@ -22,6 +22,7 @@ export default class VolunteerScreen extends Component {
         { key: 'second', title: 'Current Projects' },
       ],
       isLoading: false,
+      loadingText: "Loading...",
       isAuthenticated: false,
       currentUser: {
         name: "",
@@ -32,9 +33,11 @@ export default class VolunteerScreen extends Component {
         currentProjects: [],
         isAuthorized: false,
       },
+      currentProjects: []
     };
 
     this.ref = firebase.firestore().collection('users');
+    this.projects = firebase.firestore().collection('projects');
 
     this.authenticate = this.authenticate.bind(this);
     this.load = this.load.bind(this);
@@ -45,11 +48,11 @@ export default class VolunteerScreen extends Component {
   //   this.load(true);
   // }
 
-  // componentDidMount(){
-  //   setTimeout(()=>this.load(false), 1000);
-  // }
+  componentDidMount() {
+    this.fetchCurrentProjects();
+  }
 
-  load(bool) {
+  load(bool, loadingText) {
     this.setState({ isLoading: bool });
   }
 
@@ -59,6 +62,27 @@ export default class VolunteerScreen extends Component {
 
   setCurrentUser(user) {
     this.setState({ currentUser: user });
+  }
+
+  fetchCurrentProjects = async() => {
+
+    this.load(true, "getting current projects...");
+    this.projects.get().then(
+      snapShot => {
+        let temp = [];
+        snapShot.forEach(doc => {
+          temp.push(doc.data());
+        });
+        this.setState({
+          currentProjects: temp,
+        }, () => {
+          console.log(this.state.currentProjects);
+          this.load(false, "Loading...");
+        });
+      }, error => {
+        alert(error.message);
+      }
+    )
   }
 
   _handleIndexChange = index => this.setState({ index });
@@ -83,7 +107,7 @@ export default class VolunteerScreen extends Component {
             authenticate={this.authenticate}
           />
       case 'second':
-        return <CurrentProjects />;
+        return <CurrentProjects navigation={this.props.navigation} currentProjects={this.state.currentProjects} />;
       default: return null;
     }
   }
@@ -101,7 +125,7 @@ export default class VolunteerScreen extends Component {
           style={styles.loadingModal}
           animationDuration={5}
         >
-          <Loading loadingText='Loading...' />
+          <Loading loadingText={this.state.loadingText} />
         </Modal>
 
         <TabView
@@ -209,10 +233,10 @@ class LoginPortal extends Component {
 
   onLoginPress = async () => {
 
-    this.props.load(true);
+    this.props.load(true, "checking...");
     firebase.auth().signInWithEmailAndPassword(this.state.loginEmail, this.state.loginPassword).then(
       this.onLoginSuccess, (error) => {
-        setTimeout(() => this.props.load(false), 250);
+        setTimeout(() => this.props.load(false, "loading..."), 250);
         Alert.alert(error.message);
       }
     )
@@ -221,11 +245,11 @@ class LoginPortal extends Component {
   onSignUpPress = async () => {
     if (this.state.signUpPassword !== this.state.confirmPassword) Alert.alert("Passwords don't match");
     else {
-      this.props.load(true);
+      this.props.load(true, "registering...");
       firebase.auth().createUserWithEmailAndPassword(this.state.signUpEmail, this.state.signUpPassword)
         .then(
           this.onSignUpSuccess, (error) => {
-            setTimeout(() => this.props.load(false), 500);
+            setTimeout(() => this.props.load(false, "loading..."), 500);
             Alert.alert(error.message);
           }
         )
@@ -238,12 +262,12 @@ class LoginPortal extends Component {
   }
 
   getSavedUser = async () => {
-    try{
+    try {
       this.setState({
         loginEmail: AsyncStorage.getItem('savedEmail'),
         loginPassword: AsyncStorage.getItem('savedPassword')
       });
-    }catch(error){
+    } catch (error) {
       console.log(error.message);
     }
   }
