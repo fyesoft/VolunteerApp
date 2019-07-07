@@ -16,7 +16,7 @@ export default class CurrentProjects extends Component {
   };
 
   renderProject = ({ item }) => (
-    <Project project={item} key={item.index} navigation={this.props.navigation}/>
+    <Project project={item} key={item.id} navigation={this.props.navigation}/>
   )
 
   keyExtractor = (item, index) => item.index;

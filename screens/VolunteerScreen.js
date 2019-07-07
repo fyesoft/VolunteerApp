@@ -199,11 +199,11 @@ class LoginPortal extends Component {
         signUpPassword: "",
         confirmPassword: "",
       })
-      setTimeout(() => this.props.load(false), 500);
+      this.props.load(false);
       this.refs.createAccountModal.close();
       Alert.alert('Account Created!');
     }).catch((error) => {
-      setTimeout(() => this.props.load(false), 500);
+      this.props.load(false);
       Alert.alert(error.message)
     })
 
@@ -223,10 +223,10 @@ class LoginPortal extends Component {
           }
         }
       )
-      setTimeout(() => this.props.load(false), 250);
+      this.props.load(false);
       this.props.authenticate(true);
     }, (error) => {
-      setTimeout(() => this.props.load(false), 250);
+      this.props.load(false);
       Alert.alert(error.message);
     })
   }
@@ -236,7 +236,7 @@ class LoginPortal extends Component {
     this.props.load(true, "checking...");
     firebase.auth().signInWithEmailAndPassword(this.state.loginEmail, this.state.loginPassword).then(
       this.onLoginSuccess, (error) => {
-        setTimeout(() => this.props.load(false, "loading..."), 250);
+        this.props.load(false, "loading...");
         Alert.alert(error.message);
       }
     )
@@ -249,7 +249,7 @@ class LoginPortal extends Component {
       firebase.auth().createUserWithEmailAndPassword(this.state.signUpEmail, this.state.signUpPassword)
         .then(
           this.onSignUpSuccess, (error) => {
-            setTimeout(() => this.props.load(false, "loading..."), 500);
+            this.props.load(false, "loading...");
             Alert.alert(error.message);
           }
         )

@@ -14,6 +14,7 @@ import {
     ScrollView,
 } from 'react-native'
 import { ImagePicker, Permissions } from 'expo';
+// import ImagePicker from 'react-native-image-picker';
 import DatePicker from 'react-native-datepicker';
 import Modal from 'react-native-modalbox';
 import * as firebase from 'firebase';
@@ -39,6 +40,15 @@ export default class CreateProjectScreen extends Component {
 
             verified: false,
         }
+
+        this.upload_options = {
+            title: 'Select Image',
+            customButtons: [{ name: 'fb', title: 'Choose Photo from Facebook' }],
+            storageOptions: {
+                skipBackup: true,
+                path: 'images',
+            },
+        };
         this.projects = firebase.firestore().collection('projects');
         this.storage = firebase.storage().ref();
     }
@@ -47,7 +57,31 @@ export default class CreateProjectScreen extends Component {
         this.setState({ verified: bool });
     }
 
-    onUploadImagePress = async() => {
+    // onUploadPress = async () => {
+    //     await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    //     ImagePicker.showImagePicker(this.upload_options, (response) => {
+    //         console.log('Response = ', response);
+
+    //         if (response.didCancel) {
+    //             console.log('User cancelled image picker');
+    //         } else if (response.error) {
+    //             console.log('ImagePicker Error: ', response.error);
+    //         } else if (response.customButton) {
+    //             console.log('User tapped custom button: ', response.customButton);
+    //         } else {
+    //             const source = { uri: response.uri };
+
+    //             // You can also display the image using data:
+    //             // const source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+    //             this.setState({
+    //                 avatarSource: source,
+    //             });
+    //         }
+    //     });
+    // }
+
+    onUploadImagePress = async () => {
         await Permissions.askAsync(Permissions.CAMERA_ROLL);
         let result = await ImagePicker.launchImageLibraryAsync();
         console.log(result);
@@ -63,12 +97,12 @@ export default class CreateProjectScreen extends Component {
                 })
             )
 
-            this.uploadImage(result.uri, this.state.title).then(()=>Alert.alert("Uploaded"))
-            .catch(error=>console.log(error));
+            this.uploadImage(result.uri, this.state.title).then(() => Alert.alert("Uploaded"))
+                .catch(error => console.log(error));
         }
     }
 
-    onCameraPress = async() => {
+    onCameraPress = async () => {
         await Permissions.askAsync(Permissions.CAMERA);
         let result = await ImagePicker.launchCameraAsync();
         console.log(result);
@@ -84,17 +118,17 @@ export default class CreateProjectScreen extends Component {
                 })
             )
 
-            this.uploadImage(result.uri, this.state.title).then(()=>{
+            this.uploadImage(result.uri, this.state.title).then(() => {
                 Alert.alert("Uploaded");
-            }).catch(error=>console.log(error))
+            }).catch(error => console.log(error))
         }
     }
 
     uploadImage = async (uri, imageName) => {
-        let response = await fetch(uri);
-        let blob = await response.blob();
+        const response = await fetch(uri);
+        const blob = await response.blob();
 
-        return firebase.storage().ref().child('images/newImage3.jpg').put(blob, {contentType: 'image/jpeg'});
+        return firebase.storage().ref().child('images/'+imageName).put(blob);
     }
 
     onConfirmPress = () => {
