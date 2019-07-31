@@ -35,7 +35,7 @@ export default class CreateProjectScreen extends Component {
             end: { date: "" },
 
             positions: [],
-            img_url: { uri: "http://www.waterville-me.gov/wp-content/uploads/2017/06/volunteer-hands.jpg" },
+            img_url: { uri: "https://d2n3notmdf08g1.cloudfront.net/common/Volunteer/gotr_icon_volunteer.png" },
             isApproved: true,
 
             verified: false,
@@ -84,7 +84,7 @@ export default class CreateProjectScreen extends Component {
     onUploadImagePress = async () => {
         await Permissions.askAsync(Permissions.CAMERA_ROLL);
         let result = await ImagePicker.launchImageLibraryAsync();
-        console.log(result);
+        //console.log(result);
 
         if (!result.cancelled) {
             this.setState(
@@ -105,7 +105,7 @@ export default class CreateProjectScreen extends Component {
     onCameraPress = async () => {
         await Permissions.askAsync(Permissions.CAMERA);
         let result = await ImagePicker.launchCameraAsync();
-        console.log(result);
+        //console.log(result);
 
         if (!result.cancelled) {
             this.setState(
@@ -128,7 +128,7 @@ export default class CreateProjectScreen extends Component {
         const response = await fetch(uri);
         const blob = await response.blob();
 
-        return firebase.storage().ref().child('images/'+imageName).put(blob);
+        return firebase.storage().ref().child('images/' + imageName).put(blob);
     }
 
     onConfirmPress = () => {

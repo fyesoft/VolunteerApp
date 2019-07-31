@@ -10,24 +10,57 @@ export default class CurrentProjects extends Component {
     super(props)
 
     this.state = {
-      currentProjects: [{ message: "empty" }]
+      refreshing: false,
     };
     this.projects = firebase.firestore().collection('projects');
+    //this.user = this.props.currentUser;
   };
 
+  componentDidMount() {
+
+  }
+
+  // componentDidUpdate(prevProps) {
+  //   //create a function that returns current user from parent(s) upon pressing position
+
+  //   if (prevProps != undefined) {
+  //     if (this.user.email !== prevProps.user.email) {
+  //       this.user = this.props.currentUser;
+  //     }
+  //   }
+  // }
+
   renderProject = ({ item }) => (
-    <Project project={item} key={item.id} navigation={this.props.navigation}/>
+    <Project
+      project={item}
+      id={item.id}
+      navigation={this.props.navigation}
+      isAuthenticated={this.props.isAuthenticated}
+      getCurrentUser={this.props.getCurrentUser}
+    />
   )
 
-  keyExtractor = (item, index) => item.index;
+  keyExtractor = (item) => item.id;
+
+  handleRefresh = () => {
+    this.setState({
+      refreshing: true,
+
+    }, async () => {
+      await this.props.fetchProjects();
+      this.setState({ refreshing: false });
+    })
+  }
 
   render() {
     return (
       <View style={styles.container}>
-        <FlatList 
+        <FlatList
           data={this.props.currentProjects}
           renderItem={this.renderProject}
           keyExtractor={this.keyExtractor}
+          refreshing={this.state.refreshing}
+          onRefresh={this.handleRefresh}
         />
       </View>
     )

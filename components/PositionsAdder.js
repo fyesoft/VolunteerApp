@@ -7,7 +7,7 @@ export default class PositionsAdder extends Component {
         super(props)
 
         this.state = {
-            positions: [{ name: "", count: "" }]
+            positions: [{ name: "", count: "", enrolled: [] }]
         }
     }
 
@@ -52,7 +52,8 @@ export default class PositionsAdder extends Component {
         this.state.positions.push(
             {
                 name: "",
-                count: ""
+                count: "",
+                enrolled: []
             }
         )
         this.setState(this.state.positions);

@@ -62,7 +62,7 @@ export default class Dashboard extends Component {
   }
 
   async componentDidMount() {
-    console.log(this.state.currentProjects);
+    //console.log(this.state.currentProjects);
     this.fetchProjects();
   }
 
@@ -89,6 +89,7 @@ export default class Dashboard extends Component {
           //console.log(completedProjects);
           //console.log(this.state.completedProjects);
         });
+
         this.setState({
           completedProjects: completedProjects,
           currentProjects: currentProjects
@@ -130,7 +131,7 @@ export default class Dashboard extends Component {
 
   onCancelPress = () => {
     this.setState({ createModalVisible: false, createdProject: this.emptyProject });
-    console.log(this.state.createModalVisible);
+    //console.log(this.state.createModalVisible);
   }
 
   onConfirmProjectPress = () => {
@@ -146,11 +147,11 @@ export default class Dashboard extends Component {
       () => {
         let tempProjects = this.state.currentProjects;
         tempProjects.push(this.state.createdProject);
-        console.log(this.state.currentProjects);
+        //console.log(this.state.currentProjects);
         this.setState({
           currentProjects: tempProjects,
         });
-        console.log(this.state.currentProjects);
+        //console.log(this.state.currentProjects);
         this.setState({ createModalVisible: false, createdProject: this.emptyProject });
 
       }, (error) => alert(error.message)

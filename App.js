@@ -1,6 +1,9 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font, Icon } from 'expo';
+import { Asset } from 'expo-asset';
+import * as Font from 'expo-font';
+import { Icon } from '@expo/vector-icons';
+import { AppLoading } from 'expo';
 
 import DrawerNavigator from './navigation/DrawerNavigator';
 
@@ -9,7 +12,7 @@ import ApiKeys from './constants/ApiKeys';
 
 export default class App extends React.Component {
 
-  constructor(props){
+  constructor(props) {
     super(props);
     this.state = {
       isLoadingComplete: false,
@@ -18,12 +21,12 @@ export default class App extends React.Component {
     };
 
     //Initializing Firebase
-    if(!firebase.apps.length) firebase.initializeApp(ApiKeys.FirebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(ApiKeys.FirebaseConfig);
     firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
   }
 
   onAuthStateChanged = (user) => {
-    this.setState({isAuthenticationReady: true, isAuthenticated: !!user});
+    this.setState({ isAuthenticationReady: true, isAuthenticated: !!user });
   }
 
   render() {

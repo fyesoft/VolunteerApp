@@ -25,6 +25,7 @@ export default class VolunteerScreen extends Component {
       loadingText: "Loading...",
       isAuthenticated: false,
       currentUser: {
+        id: "",
         name: "",
         email: "",
         hours: 0,
@@ -42,6 +43,7 @@ export default class VolunteerScreen extends Component {
     this.authenticate = this.authenticate.bind(this);
     this.load = this.load.bind(this);
     this.setCurrentUser = this.setCurrentUser.bind(this);
+    this.getCurrentUser = this.getCurrentUser.bind(this);
   };
 
   // componentWillMount(){
@@ -53,7 +55,7 @@ export default class VolunteerScreen extends Component {
   }
 
   load(bool, loadingText) {
-    this.setState({ isLoading: bool });
+    this.setState({ isLoading: bool, loadingText: loadingText });
   }
 
   authenticate(bool) {
@@ -64,19 +66,25 @@ export default class VolunteerScreen extends Component {
     this.setState({ currentUser: user });
   }
 
-  fetchCurrentProjects = async() => {
+  getCurrentUser(){
+    return this.state.currentUser;
+  }
 
-    this.load(true, "getting current projects...");
+  fetchCurrentProjects = async () => {
+
+    this.load(true, "fetching projects...");
     this.projects.get().then(
       snapShot => {
         let temp = [];
         snapShot.forEach(doc => {
-          temp.push(doc.data());
+          let tempData = {id: doc.id};
+          Object.assign(tempData, doc.data());
+          temp.push(tempData);
         });
         this.setState({
           currentProjects: temp,
         }, () => {
-          console.log(this.state.currentProjects);
+         // console.log(this.state.currentProjects);
           this.load(false, "Loading...");
         });
       }, error => {
@@ -107,7 +115,14 @@ export default class VolunteerScreen extends Component {
             authenticate={this.authenticate}
           />
       case 'second':
-        return <CurrentProjects navigation={this.props.navigation} currentProjects={this.state.currentProjects} />;
+        return <CurrentProjects
+          isAuthenticated={this.state.isAuthenticated}
+          
+          getCurrentUser={this.getCurrentUser}
+          navigation={this.props.navigation}
+          currentProjects={this.state.currentProjects}
+          fetchProjects={this.fetchCurrentProjects}
+        />;
       default: return null;
     }
   }
@@ -217,8 +232,10 @@ class LoginPortal extends Component {
       querySnapShot.forEach(
         (doc) => {
           if (doc.data().email === this.state.loginEmail) {
-            console.log(doc.data());
-            this.props.setCurrentUser(doc.data());
+            //console.log(doc.data());
+            let user = {id: doc.id};
+            Object.assign(user, doc.data())
+            this.props.setCurrentUser(user);
             return;
           }
         }
