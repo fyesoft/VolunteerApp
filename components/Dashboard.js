@@ -112,7 +112,7 @@ export default class Dashboard extends Component {
   keyExtractor = (item, index) => item.index;
 
   renderItem = ({ item }) => (
-    <Project project={item} key={item.index}/>
+    <Project project={item} key={item.index} />
   )
 
   renderCreateButton() {
@@ -213,18 +213,17 @@ export default class Dashboard extends Component {
               <Text style={styles.hoursText}>Hours:</Text>
               <Text style={styles.hoursText}>{this.props.user.hours} Hours and {this.props.user.minutes} Minutes</Text>
             </View>
+            <View style={styles.hours}>
+              <Text style={styles.hoursText}>Preferred Positions:</Text>
+              <Text style={styles.hoursText}>placeholder</Text>
+            </View>
           </View>
 
           {this.renderCreateButton()}
 
           <View style={styles.volunteerExp}>
             <Text style={[styles.name, { fontSize: 15, }]}>Completed Projects</Text>
-            <FlatList
-              data={this.state.completedProjects}
-              renderItem={this.renderItem}
-              keyExtractor={this.keyExtractor}
-              ref='myList'
-            />
+            <Text>{this.props.user.completedProjects}</Text>
           </View>
 
           <View style={styles.volunteerExp}>

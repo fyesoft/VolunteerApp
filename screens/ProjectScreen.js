@@ -40,7 +40,6 @@ export default class ProjectScreen extends Component {
 
     renderPosition = ({ position }) => (
         <TouchableOpacity style={styles.positionsListItem}>
-
             <Text> {position} </Text>
         </TouchableOpacity>
 
@@ -60,7 +59,7 @@ export default class ProjectScreen extends Component {
             return positions.map((position, index) => (
                 <TouchableOpacity key={index} style={styles.positionsListItem} onPress={() => this.onPositionPress(index)}>
                     <Text> {position.name} </Text>
-                    <Text> {position.count} </Text>
+                    <Text> {position.enrolled.length}/{position.count} </Text>
                 </TouchableOpacity>
             ))
         } else {
@@ -75,15 +74,28 @@ export default class ProjectScreen extends Component {
 
         if (this.getCurrentUser().id !== "") {
             //check if the user is already registered to avoid multiple entries.
-            newPositions[index].enrolled.push({
-                name: this.getCurrentUser().name,
-                email: this.getCurrentUser().email,
-            })
-            project.update({
-                positions: newPositions
-            }).then(uh => Alert.alert("Registered as " + newPositions[index].name))
-        }else{
+            for (let i = 0; i < newPositions[index].enrolled.length; i++) {
+                if (newPositions[index].enrolled[i].email == this.getCurrentUser().email) {
+                    Alert.alert("Already Registered");
+                    return;
+                }
+            }
+
+            if (newPositions[index].enrolled.length == newPositions[index].count) {
+                Alert.alert("No more slots available for this position, please choose another.");
+            }
+            else {
+                newPositions[index].enrolled.push({
+                    name: this.getCurrentUser().name,
+                    email: this.getCurrentUser().email,
+                })
+                project.update({
+                    positions: newPositions
+                }).then(uh => Alert.alert("Registered as " + newPositions[index].name))
+            }
+        } else {
             //pop open modal saying something along the lines of either sign in or register anonymously.
+            Alert.alert("Please sign in if you want to register.")
         }
     }
 
