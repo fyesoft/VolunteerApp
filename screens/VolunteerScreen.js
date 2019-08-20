@@ -30,8 +30,7 @@ export default class VolunteerScreen extends Component {
         email: "",
         hours: 0,
         minutes: 0,
-        completedProjects: [],
-        currentProjects: [],
+        projects: [],
         isAuthorized: false,
       },
       currentProjects: []
@@ -204,8 +203,7 @@ class LoginPortal extends Component {
       email: this.state.signUpEmail,
       hours: 0,
       minutes: 0,
-      completedProjects: [],
-      currentProjects: [],
+      projects: [],
       isAuthorized: false,
     }).then(() => {
       this.setState({
@@ -262,11 +260,11 @@ class LoginPortal extends Component {
   onSignUpPress = async () => {
     if (this.state.signUpPassword !== this.state.confirmPassword) Alert.alert("Passwords don't match");
     else {
-      this.props.load(true, "registering...");
+      //this.props.load(true, "registering...");
       firebase.auth().createUserWithEmailAndPassword(this.state.signUpEmail, this.state.signUpPassword)
         .then(
           this.onSignUpSuccess, (error) => {
-            this.props.load(false, "loading...");
+            //this.props.load(false, "loading...");
             Alert.alert(error.message);
           }
         )

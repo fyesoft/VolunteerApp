@@ -28,7 +28,10 @@ export default class Dashboard extends Component {
       isAuthorized: true,
       createModalVisible: false,
       currentProjects: [],
+      currentProjectsRefreshing: false,
       completedProjects: [],
+      completedProjectsRefreshing: false,
+      listsLoading: true,
 
       createdProject: {
         title: "",
@@ -42,6 +45,9 @@ export default class Dashboard extends Component {
         isApproved: true,
       }
     }
+
+    // this.attendingProjects = [];
+    // this.completedProjects = [];
 
     this.emptyProject = {
       title: "",
@@ -59,11 +65,34 @@ export default class Dashboard extends Component {
 
   componentWillMount() {
     LayoutAnimation.easeInEaseOut();
+    //this.organizeProjects();
   }
 
   async componentDidMount() {
     //console.log(this.state.currentProjects);
-    this.fetchProjects();
+    this.organizeProjects();
+  }
+
+  async organizeProjects() {
+    let attending = [];
+    let completed = [];
+    await new Promise((resolve) => {
+      //console.log(this.attendingProjects);
+      this.props.user.projects.forEach(project => {
+        console.log(project);
+        //console.log(new Date(project.end.date));
+        if (new Date(project.end.date) < new Date()) {
+          completed.push(project);
+        } else attending.push(project);
+      })
+      resolve();
+    }).then(res => {
+      this.setState({
+        currentProjects: attending,
+        completedProjects: completed,
+        listsLoading: false,
+      })
+    })
   }
 
   componentWillUnmount() {
@@ -71,33 +100,36 @@ export default class Dashboard extends Component {
   }
 
   fetchProjects = async () => {
-    let currentProjects = [];
-    let completedProjects = [];
+    // let currentProjects = [];
+    // let completedProjects = [];
 
-    this.projects.get().then(
-      snapShot => {
-        snapShot.forEach(doc => {
-          //console.log(this.props.user);
-          //console.log(doc.data());
+    return await new Promise((resolve) => {
+      this.projects.get().then(
+        snapShot => {
+          snapShot.forEach(doc => {
+            //console.log(this.props.user);
+            //console.log(doc.data());
 
-          if (this.props.user.completedProjects.includes(doc.data().title))
-            completedProjects.push(doc.data());
+            if (this.props.user.completedProjects.includes(doc.data().title))
+              this.completedProjects.push(doc.data());
 
-          if (this.props.user.currentProjects.includes(doc.data().title))
-            currentProjects.push(doc.data());
+            if (this.props.user.currentProjects.includes(doc.data().title))
+              this.attendingProjects.push(doc.data());
 
-          //console.log(completedProjects);
-          //console.log(this.state.completedProjects);
-        });
+            //console.log(completedProjects);
+            //console.log(this.state.completedProjects);
+          });
 
-        this.setState({
-          completedProjects: completedProjects,
-          currentProjects: currentProjects
-        });
-      }, error => {
-        alert(error.message);
-      }
-    )
+          // this.setState({
+          //   completedProjects: completedProjects,
+          //   currentProjects: currentProjects
+          // });
+        }, error => {
+          alert(error.message);
+        }
+      )
+      resolve("done");
+    })
   }
 
   onSignOutPress = () => {
@@ -111,7 +143,7 @@ export default class Dashboard extends Component {
 
   keyExtractor = (item, index) => item.index;
 
-  renderItem = ({ item }) => (
+  renderProject = ({ item }) => (
     <Project project={item} key={item.index} />
   )
 
@@ -136,12 +168,6 @@ export default class Dashboard extends Component {
 
   onConfirmProjectPress = () => {
 
-    // if (
-    //   this.state.createdProject.title.length <= 3 ||
-    //   this.state.createdProject.summary.length <= 10 ||
-    //   this.state.createdProject.dateRange === "" ||
-    //   this.state.createdProject.positions
-    // )
 
     this.projects.add(this.state.createdProject).then(
       () => {
@@ -194,6 +220,38 @@ export default class Dashboard extends Component {
     )
   }
 
+  renderLists() {
+    if (this.state.listsLoading) {
+      return (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',}}>
+          <Text>Loading...</Text>
+        </View>
+      )
+    } else {
+      return (
+        <View style={{ flex: 1, }}>
+          <View style={styles.projectLists}>
+            <Text style={[styles.name, { fontSize: 15, }]}>Attending Projects</Text>
+            <FlatList
+              data={this.state.currentProjects}
+              renderItem={this.renderProject}
+              keyExtractor={this.keyExtractor}
+            />
+          </View>
+
+          <View style={styles.projectLists}>
+            <Text style={[styles.name, { fontSize: 15, }]}>Completed Projects</Text>
+            <FlatList
+              data={this.state.completedProjects}
+              renderItem={this.renderProject}
+              keyExtractor={this.keyExtractor}
+            />
+          </View>
+        </View>
+      )
+    }
+  }
+
   render() {
     return (
       <View style={{ flex: 1 }}>
@@ -221,20 +279,8 @@ export default class Dashboard extends Component {
 
           {this.renderCreateButton()}
 
-          <View style={styles.volunteerExp}>
-            <Text style={[styles.name, { fontSize: 15, }]}>Completed Projects</Text>
-            <Text>{this.props.user.completedProjects}</Text>
-          </View>
+          {this.renderLists()}
 
-          <View style={styles.volunteerExp}>
-            <Text style={[styles.name, { fontSize: 15, }]}>Attending Projects</Text>
-            <FlatList
-              data={this.state.currentProjects}
-              renderItem={this.renderItem}
-              keyExtractor={this.keyExtractor}
-              ref='myList'
-            />
-          </View>
         </ScrollView>
       </View>
     )
@@ -279,6 +325,13 @@ const styles = StyleSheet.create({
   },
   volunteerExp: {
     width: '100%',
+    flexDirection: 'column',
+    padding: 15,
+  },
+  projectLists: {
+    width: '100%',
+    flex: 1,
+    maxHeight: 300,
     flexDirection: 'column',
     padding: 15,
   },

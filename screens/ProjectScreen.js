@@ -18,10 +18,12 @@ export default class ProjectScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
-
+            confirmModalVisible: false,
+            selectedPosition: -1,
         };
 
         this.fbProjects = firebase.firestore().collection('projects');
+        this.users = firebase.firestore().collection('users');
 
         this.project = props.navigation.state.params.project;
         this.projectID = props.navigation.state.params.id;
@@ -31,11 +33,11 @@ export default class ProjectScreen extends Component {
 
     componentWillMount() {
         //console.log(this.project.positions);
-        this.project.positions.forEach(element => {
-            console.log(element);
-            console.log(element.name);
-            console.log(element.count);
-        });
+        // this.project.positions.forEach(element => {
+        //     console.log(element);
+        //     console.log(element.name);
+        //     console.log(element.count);
+        // });
     }
 
     renderPosition = ({ position }) => (
@@ -54,12 +56,13 @@ export default class ProjectScreen extends Component {
     keyExtractor = (item) => item.index;
 
     renderPositions() {
+        //() => this.onPositionPress(index)
         let positions = this.project.positions;
         if (positions.length > 0) {
             return positions.map((position, index) => (
-                <TouchableOpacity key={index} style={styles.positionsListItem} onPress={() => this.onPositionPress(index)}>
-                    <Text> {position.name} </Text>
-                    <Text> {position.enrolled.length}/{position.count} </Text>
+                <TouchableOpacity key={index} style={styles.positionsListItem} onPress={() => this.toggleConfirmation(index)}>
+                    <Text style={styles.positionText}> {position.name} </Text>
+                    <Text style={styles.positionText}> {position.enrolled.length}/{position.count} </Text>
                 </TouchableOpacity>
             ))
         } else {
@@ -67,7 +70,16 @@ export default class ProjectScreen extends Component {
         }
     }
 
-    onPositionPress(index) {
+    toggleConfirmation(index) {
+        this.setState({
+            confirmModalVisible: !this.state.confirmModalVisible,
+            selectedPosition: index,
+        })
+    }
+
+    onConfirmPress(index) {
+
+        //this.toggleConfirmation(index);
 
         let project = this.fbProjects.doc(this.project.id + "");
         let newPositions = this.project.positions;
@@ -89,9 +101,23 @@ export default class ProjectScreen extends Component {
                     name: this.getCurrentUser().name,
                     email: this.getCurrentUser().email,
                 })
+
                 project.update({
                     positions: newPositions
-                }).then(uh => Alert.alert("Registered as " + newPositions[index].name))
+                }).then(yuh => {
+                    let user = this.users.doc(this.getCurrentUser().id + "");
+                    let attendingProjects = this.getCurrentUser().projects;
+                    project.get().then(snapshot => {
+                        //console.log(snapshot.data());
+                        attendingProjects.push(snapshot.data());
+                        user.update({
+                            projects: attendingProjects,
+                        }).then(yuh => {
+                            Alert.alert("Registered as " + newPositions[index].name);
+                        })
+                    })
+                    
+                })
             }
         } else {
             //pop open modal saying something along the lines of either sign in or register anonymously.
@@ -102,6 +128,23 @@ export default class ProjectScreen extends Component {
     render() {
         return (
             <ScrollView style={styles.container}>
+
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={this.state.confirmModalVisible}
+                >
+                    <View style={styles.modalView}>
+                        <View style={styles.modalDialogue}>
+                            <Text style={styles.modalTitle}>Confirmation</Text>
+                            <Text style={styles.modalText}>Please confirm that you would like to register for this project:</Text>
+                            <View style={styles.modalButtonsContainer}>
+                                <Button title="Cancel" onPress={() => this.toggleConfirmation(-1)} />
+                                <Button title="Confirm" onPress={() => this.onConfirmPress(this.state.selectedPosition)} />
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
                 <View style={styles.titleBar}>
                     <View style={styles.backButton}>
@@ -193,12 +236,52 @@ const styles = StyleSheet.create({
     },
     positionsListItem: {
         width: '90%',
-        margin: 5,
         marginLeft: 'auto',
         marginRight: 'auto',
-        borderWidth: 1,
-        borderColor: 'black',
-        height: 50,
+        borderRadius: 5,
+        backgroundColor: '#00A887',
+        height: 45,
+        marginTop: 5,
+        padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    positionText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    modalView: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+    },
+    modalDialogue: {
+        padding: 15,
+        height: 200,
+        width: 300,
+        backgroundColor: 'white',
+        borderRadius: 15,
+        opacity: 0.8,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 'auto',
+        marginRight: 'auto'
+    },
+    modalText: {
+        fontSize: 15,
+        margin: 3,
+    },
+    modalButtonsContainer: {
+        flexDirection: 'row',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+    },
+    modalButton: {
+        margin: 3,
     }
 
 })

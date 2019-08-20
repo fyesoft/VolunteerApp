@@ -10,7 +10,7 @@ export default class Project extends Component {
         this.state = {
 
         };
-        console.log(this.props.currentUser);
+        //console.log(this.props.currentUser);
     };
 
     render() {

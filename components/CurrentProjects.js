@@ -52,6 +52,12 @@ export default class CurrentProjects extends Component {
     })
   }
 
+  renderEmptyList = () => (
+    <View style={styles.emptyListContainer}>
+      <Text style={styles.emptyListText}>No Projects Available..</Text>
+    </View>
+  )
+
   render() {
     return (
       <View style={styles.container}>
@@ -61,6 +67,7 @@ export default class CurrentProjects extends Component {
           keyExtractor={this.keyExtractor}
           refreshing={this.state.refreshing}
           onRefresh={this.handleRefresh}
+          ListEmptyComponent={this.renderEmptyList}
         />
       </View>
     )
@@ -70,5 +77,15 @@ export default class CurrentProjects extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  emptyListContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyListText: {
+    color: 'gray',
+    fontSize: 17,
+    padding: 20,
   }
 })

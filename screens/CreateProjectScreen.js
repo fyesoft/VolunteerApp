@@ -223,7 +223,7 @@ export default class CreateProjectScreen extends Component {
                                 date={this.state.start.date}
                                 mode="datetime"
                                 placeholder="select date and time"
-                                format="MMM Do YYYY, hh:mm a"
+                                format="MMM D YYYY, hh:mm a"
 
                                 confirmBtnText="Confirm"
                                 cancelBtnText="Cancel"
@@ -253,7 +253,7 @@ export default class CreateProjectScreen extends Component {
                                 date={this.state.end.date}
                                 mode="datetime"
                                 placeholder="select date and time"
-                                format="MMM Do YYYY, hh:mm a"
+                                format="MMM D YYYY, hh:mm a"
 
                                 confirmBtnText="Confirm"
                                 cancelBtnText="Cancel"
