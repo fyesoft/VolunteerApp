@@ -25,13 +25,14 @@ export default class Dashboard extends Component {
     super(props)
 
     this.state = {
+      user: {},
+
       isAuthorized: true,
       createModalVisible: false,
       currentProjects: [],
-      currentProjectsRefreshing: false,
       completedProjects: [],
-      completedProjectsRefreshing: false,
-      listsLoading: true,
+      listsRefreshing: false,
+      hoursRefreshing: false,
 
       createdProject: {
         title: "",
@@ -61,16 +62,27 @@ export default class Dashboard extends Component {
       isApproved: true,
     }
     this.projects = firebase.firestore().collection('projects');
+    this.users = firebase.firestore().collection('users');
   }
 
-  componentWillMount() {
+  async componentWillMount() {
     LayoutAnimation.easeInEaseOut();
-    //this.organizeProjects();
+
+    await new Promise((resolve) => {
+      this.setState({ user: this.props.getCurrentUser() })
+      resolve();
+    }).then(res => {
+      this.organizeProjects();
+    })
   }
 
   async componentDidMount() {
     //console.log(this.state.currentProjects);
-    this.organizeProjects();
+
+    this.users.doc(this.state.user.id + "").onSnapshot(doc => {
+      this.setState({ user: doc.data() });
+      this.organizeProjects();
+    })
   }
 
   async organizeProjects() {
@@ -78,8 +90,8 @@ export default class Dashboard extends Component {
     let completed = [];
     await new Promise((resolve) => {
       //console.log(this.attendingProjects);
-      this.props.user.projects.forEach(project => {
-        console.log(project);
+      this.state.user.projects.forEach(project => {
+        //console.log(project);
         //console.log(new Date(project.end.date));
         if (new Date(project.end.date) < new Date()) {
           completed.push(project);
@@ -90,7 +102,6 @@ export default class Dashboard extends Component {
       this.setState({
         currentProjects: attending,
         completedProjects: completed,
-        listsLoading: false,
       })
     })
   }
@@ -99,38 +110,38 @@ export default class Dashboard extends Component {
     LayoutAnimation.easeInEaseOut();
   }
 
-  fetchProjects = async () => {
-    // let currentProjects = [];
-    // let completedProjects = [];
+  // fetchProjects = async () => {
+  //   // let currentProjects = [];
+  //   // let completedProjects = [];
 
-    return await new Promise((resolve) => {
-      this.projects.get().then(
-        snapShot => {
-          snapShot.forEach(doc => {
-            //console.log(this.props.user);
-            //console.log(doc.data());
+  //   return await new Promise((resolve) => {
+  //     this.projects.get().then(
+  //       snapShot => {
+  //         snapShot.forEach(doc => {
+  //           //console.log(this.props.user);
+  //           //console.log(doc.data());
 
-            if (this.props.user.completedProjects.includes(doc.data().title))
-              this.completedProjects.push(doc.data());
+  //           if (this.props.user.completedProjects.includes(doc.data().title))
+  //             this.completedProjects.push(doc.data());
 
-            if (this.props.user.currentProjects.includes(doc.data().title))
-              this.attendingProjects.push(doc.data());
+  //           if (this.props.user.currentProjects.includes(doc.data().title))
+  //             this.attendingProjects.push(doc.data());
 
-            //console.log(completedProjects);
-            //console.log(this.state.completedProjects);
-          });
+  //           //console.log(completedProjects);
+  //           //console.log(this.state.completedProjects);
+  //         });
 
-          // this.setState({
-          //   completedProjects: completedProjects,
-          //   currentProjects: currentProjects
-          // });
-        }, error => {
-          alert(error.message);
-        }
-      )
-      resolve("done");
-    })
-  }
+  //         // this.setState({
+  //         //   completedProjects: completedProjects,
+  //         //   currentProjects: currentProjects
+  //         // });
+  //       }, error => {
+  //         alert(error.message);
+  //       }
+  //     )
+  //     resolve("done");
+  //   })
+  // }
 
   onSignOutPress = () => {
     firebase.auth().signOut().then(
@@ -141,10 +152,10 @@ export default class Dashboard extends Component {
     )
   }
 
-  keyExtractor = (item, index) => item.index;
+  keyExtractor = (item) => item.id;
 
   renderProject = ({ item }) => (
-    <Project project={item} key={item.index} />
+    <Project project={item} key={item.key} />
   )
 
   renderCreateButton() {
@@ -223,7 +234,7 @@ export default class Dashboard extends Component {
   renderLists() {
     if (this.state.listsLoading) {
       return (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',}}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', }}>
           <Text>Loading...</Text>
         </View>
       )
@@ -236,6 +247,8 @@ export default class Dashboard extends Component {
               data={this.state.currentProjects}
               renderItem={this.renderProject}
               keyExtractor={this.keyExtractor}
+              refreshing={this.state.listsRefreshing}
+              onRefresh={this.handleRefresh}
             />
           </View>
 
@@ -245,10 +258,29 @@ export default class Dashboard extends Component {
               data={this.state.completedProjects}
               renderItem={this.renderProject}
               keyExtractor={this.keyExtractor}
+              refreshing={this.state.listsRefreshing}
+              onRefresh={this.handleRefresh}
             />
           </View>
         </View>
       )
+    }
+  }
+
+  handleRefresh = () => {
+    this.setState({
+      user: this.props.getCurrentUser(),
+      listsRefreshing: true,
+      hoursRefreshing: true,
+    }), async () => {
+
+      await setTimeout(() => { }, 1500)
+
+      this.setState({
+        user: this.props.getCurrentUser(),
+        listsRefreshing: false,
+        hoursRefreshing: false,
+      })
     }
   }
 
@@ -258,7 +290,7 @@ export default class Dashboard extends Component {
         <ScrollView style={styles.container}>
 
           <View style={styles.profile}>
-            <Text style={styles.name}>{this.props.user.name}</Text>
+            <Text style={styles.name}>{this.state.user.name}</Text>
             <TouchableOpacity
               style={styles.signOutButton}
               onPress={this.onSignOutPress}>
@@ -269,7 +301,7 @@ export default class Dashboard extends Component {
             <Text style={[styles.name, { fontSize: 15, }]}>Volunteer Experience</Text>
             <View style={styles.hours}>
               <Text style={styles.hoursText}>Hours:</Text>
-              <Text style={styles.hoursText}>{this.props.user.hours} Hours and {this.props.user.minutes} Minutes</Text>
+              <Text style={styles.hoursText}>{this.state.user.hours} Hours and {this.state.user.minutes} Minutes</Text>
             </View>
             <View style={styles.hours}>
               <Text style={styles.hoursText}>Preferred Positions:</Text>

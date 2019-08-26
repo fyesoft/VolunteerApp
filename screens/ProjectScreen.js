@@ -29,6 +29,7 @@ export default class ProjectScreen extends Component {
         this.projectID = props.navigation.state.params.id;
         this.isAuthenticated = props.navigation.state.params.isAuthenticated;
         this.getCurrentUser = () => props.navigation.state.params.getCurrentUser();
+        this.setCurrentUser = () => props.navigation.state.params.setCurrentUser;
     }
 
     componentWillMount() {
@@ -113,10 +114,13 @@ export default class ProjectScreen extends Component {
                         user.update({
                             projects: attendingProjects,
                         }).then(yuh => {
+                            user.get().then(snapshot => {
+                                this.setCurrentUser(snapshot.data())
+                            })
                             Alert.alert("Registered as " + newPositions[index].name);
                         })
                     })
-                    
+
                 })
             }
         } else {

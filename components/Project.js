@@ -16,13 +16,14 @@ export default class Project extends Component {
     render() {
         return (
 
-            <TouchableOpacity style={styles.container} onPress={
+            <TouchableOpacity key={this.props.id} style={styles.container} onPress={
                 () => this.props.navigation.navigate('Project',
                     {
                         project: this.props.project,
                         id: this.props.id,
                         isAuthenticated: this.props.isAuthenticated,
-                        getCurrentUser: this.props.getCurrentUser
+                        getCurrentUser: this.props.getCurrentUser,
+                        setCurrentUser: this.props.setCurrentUser
                     }
                 )
             }>

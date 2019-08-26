@@ -20,23 +20,14 @@ export default class CurrentProjects extends Component {
 
   }
 
-  // componentDidUpdate(prevProps) {
-  //   //create a function that returns current user from parent(s) upon pressing position
-
-  //   if (prevProps != undefined) {
-  //     if (this.user.email !== prevProps.user.email) {
-  //       this.user = this.props.currentUser;
-  //     }
-  //   }
-  // }
-
   renderProject = ({ item }) => (
     <Project
       project={item}
-      id={item.id}
+      id={item.key}
       navigation={this.props.navigation}
       isAuthenticated={this.props.isAuthenticated}
       getCurrentUser={this.props.getCurrentUser}
+      setCurrentUser={this.props.setCurrentUser}
     />
   )
 
