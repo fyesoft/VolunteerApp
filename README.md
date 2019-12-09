@@ -1,5 +1,5 @@
-# MCMC-Volunteer
-Central and Volunteerism app for MCMC
+# Volunteer App
+A volunteer management system app.
 
 Tech used:
 Main: React Native,
