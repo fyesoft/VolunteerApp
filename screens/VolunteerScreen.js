@@ -1,5 +1,15 @@
 import React, { Component } from 'react'
-import { Text, TextInput, View, StyleSheet, TouchableOpacity, LayoutAnimation, Alert, AsyncStorage } from 'react-native'
+import {
+  Text,
+  TextInput,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  LayoutAnimation,
+  Alert,
+  AsyncStorage,
+  Button,
+} from 'react-native'
 import Modal from 'react-native-modalbox';
 import { TabBar, TabView } from 'react-native-tab-view'
 import { DrawerActions } from 'react-navigation';
@@ -25,12 +35,12 @@ export default class VolunteerScreen extends Component {
       loadingText: "Loading...",
       isAuthenticated: false,
       currentUser: {
+        id: "",
         name: "",
         email: "",
         hours: 0,
         minutes: 0,
-        completedProjects: [],
-        currentProjects: [],
+        projects: [],
         isAuthorized: false,
       },
       currentProjects: []
@@ -42,18 +52,15 @@ export default class VolunteerScreen extends Component {
     this.authenticate = this.authenticate.bind(this);
     this.load = this.load.bind(this);
     this.setCurrentUser = this.setCurrentUser.bind(this);
+    this.getCurrentUser = this.getCurrentUser.bind(this);
   };
-
-  // componentWillMount(){
-  //   this.load(true);
-  // }
 
   componentDidMount() {
     this.fetchCurrentProjects();
   }
 
   load(bool, loadingText) {
-    this.setState({ isLoading: bool });
+    this.setState({ isLoading: bool, loadingText: loadingText });
   }
 
   authenticate(bool) {
@@ -64,19 +71,25 @@ export default class VolunteerScreen extends Component {
     this.setState({ currentUser: user });
   }
 
-  fetchCurrentProjects = async() => {
+  getCurrentUser() {
+    return this.state.currentUser;
+  }
 
-    this.load(true, "getting current projects...");
+  fetchCurrentProjects = async () => {
+
+    this.load(true, "Fetching Stuff...");
     this.projects.get().then(
       snapShot => {
         let temp = [];
         snapShot.forEach(doc => {
-          temp.push(doc.data());
+          let tempData = { id: doc.id };
+          Object.assign(tempData, doc.data());
+          temp.push(tempData);
         });
         this.setState({
           currentProjects: temp,
         }, () => {
-          console.log(this.state.currentProjects);
+          // console.log(this.state.currentProjects);
           this.load(false, "Loading...");
         });
       }, error => {
@@ -95,7 +108,7 @@ export default class VolunteerScreen extends Component {
             navigation={this.props.navigation}
             isLoading={this.state.isLoading}
             load={this.load}
-            user={this.state.currentUser}
+            getCurrentUser={this.getCurrentUser}
             authenticate={this.authenticate}
           />
         else
@@ -107,7 +120,14 @@ export default class VolunteerScreen extends Component {
             authenticate={this.authenticate}
           />
       case 'second':
-        return <CurrentProjects navigation={this.props.navigation} currentProjects={this.state.currentProjects} />;
+        return <CurrentProjects
+          isAuthenticated={this.state.isAuthenticated}
+          setCurrentUser={this.setCurrentUser}
+          getCurrentUser={this.getCurrentUser}
+          navigation={this.props.navigation}
+          currentProjects={this.state.currentProjects}
+          fetchProjects={this.fetchCurrentProjects}
+        />;
       default: return null;
     }
   }
@@ -165,6 +185,8 @@ class LoginPortal extends Component {
       loginEmail: "",
       loginPassword: "",
 
+      resetEmail: "",
+
       modalPosition: 'top'
     };
 
@@ -182,6 +204,17 @@ class LoginPortal extends Component {
   onCreateAccount = () => this.refs.createAccountModal.open();
   onCancelPress = () => this.refs.createAccountModal.close();
 
+  onForgotPassword = () => this.refs.forgotPasswordModal.open();
+  onCancelForgotPassword = () => this.refs.forgotPasswordModal.close();
+  onConfirmForgotPassword = () => {
+    //this.props.load(true, "Sending Email...");
+    firebase.auth().sendPasswordResetEmail(this.state.resetEmail).then(res => {
+      //this.props.load(false, "Loading...");
+      this.refs.forgotPasswordModal.close();
+      Alert.alert("Sent. You should receive it shortly.");
+    }).catch(error => Alert.alert(error));
+  }
+
   onSignUpSuccess = async () => {
     //this.props.load(true);
     this.props.users.add({
@@ -189,8 +222,7 @@ class LoginPortal extends Component {
       email: this.state.signUpEmail,
       hours: 0,
       minutes: 0,
-      completedProjects: [],
-      currentProjects: [],
+      projects: [],
       isAuthorized: false,
     }).then(() => {
       this.setState({
@@ -199,11 +231,11 @@ class LoginPortal extends Component {
         signUpPassword: "",
         confirmPassword: "",
       })
-      setTimeout(() => this.props.load(false), 500);
+      this.props.load(false);
       this.refs.createAccountModal.close();
       Alert.alert('Account Created!');
     }).catch((error) => {
-      setTimeout(() => this.props.load(false), 500);
+      this.props.load(false);
       Alert.alert(error.message)
     })
 
@@ -217,16 +249,18 @@ class LoginPortal extends Component {
       querySnapShot.forEach(
         (doc) => {
           if (doc.data().email === this.state.loginEmail) {
-            console.log(doc.data());
-            this.props.setCurrentUser(doc.data());
+            //console.log(doc.data());
+            let user = { id: doc.id };
+            Object.assign(user, doc.data())
+            this.props.setCurrentUser(user);
             return;
           }
         }
       )
-      setTimeout(() => this.props.load(false), 250);
+      this.props.load(false);
       this.props.authenticate(true);
     }, (error) => {
-      setTimeout(() => this.props.load(false), 250);
+      this.props.load(false);
       Alert.alert(error.message);
     })
   }
@@ -236,7 +270,7 @@ class LoginPortal extends Component {
     this.props.load(true, "checking...");
     firebase.auth().signInWithEmailAndPassword(this.state.loginEmail, this.state.loginPassword).then(
       this.onLoginSuccess, (error) => {
-        setTimeout(() => this.props.load(false, "loading..."), 250);
+        this.props.load(false, "loading...");
         Alert.alert(error.message);
       }
     )
@@ -245,11 +279,11 @@ class LoginPortal extends Component {
   onSignUpPress = async () => {
     if (this.state.signUpPassword !== this.state.confirmPassword) Alert.alert("Passwords don't match");
     else {
-      this.props.load(true, "registering...");
+      //this.props.load(true, "registering...");
       firebase.auth().createUserWithEmailAndPassword(this.state.signUpEmail, this.state.signUpPassword)
         .then(
           this.onSignUpSuccess, (error) => {
-            setTimeout(() => this.props.load(false, "loading..."), 500);
+            //this.props.load(false, "loading...");
             Alert.alert(error.message);
           }
         )
@@ -325,7 +359,7 @@ class LoginPortal extends Component {
 
   render() {
     return (
-      <View style={styles.login_contaner}>
+      <View style={styles.login_container}>
 
         <Modal
           backButtonClose={true}
@@ -337,6 +371,41 @@ class LoginPortal extends Component {
           keyboardTopOffset={0}
         >
           {this.renderModalContent()}
+        </Modal>
+
+        <Modal
+          backButtonClose={true}
+          swipeToClose={false}
+          style={styles.forgotPasswordModal}
+          backdrop={true}
+          position='top'
+          ref='forgotPasswordModal'
+          keyboardTopOffset={0}
+        >
+          <View style={styles.forgotPasswordModalContainer}>
+            <Text style={[styles.lgBtnText, { color: 'black', marginBottom: 15, marginLeft: 'auto', marginRight: 'auto', width: 250, textAlign: 'center' }]}>
+              Please enter the email you would like to use to reset your password:
+            </Text>
+            <TextInput
+              value={this.state.resetEmail}
+              onChangeText={(text) => this.setState({ resetEmail: text })}
+              autoCapitalize='none'
+              autoCorrect={false}
+              placeholder="example@email.com"
+              style={styles.textInput} />
+            <View style={styles.createAccountButtons}>
+              <TouchableOpacity
+                onPress={this.onCancelForgotPassword}
+                style={[styles.createAccountButton, { backgroundColor: '#F73737', marginRight: '2.5%' }]}>
+                <Text style={[styles.lgBtnText, { color: 'white' }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={this.onConfirmForgotPassword}
+                style={[styles.createAccountButton, { backgroundColor: '#00A887', marginLeft: '2.5%' }]}>
+                <Text style={[styles.lgBtnText, { color: 'white' }]}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </Modal>
 
         <View style={styles.loginFields}>
@@ -358,6 +427,9 @@ class LoginPortal extends Component {
           <TouchableOpacity onPress={this.onLoginPress} style={styles.loginButton}>
             <Text style={styles.lgBtnText}>Login</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={this.onForgotPassword} style={styles.forgotButton}>
+            <Text style={[styles.lgBtnText, { color: '#00A887' }]}>Forgot Password?</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={this.onCreateAccount} style={[styles.loginButton, { backgroundColor: 'white', borderWidth: 3, borderColor: '#00A887', }]}>
@@ -378,12 +450,13 @@ const styles = StyleSheet.create({
     width: 300,
     height: 200,
   },
-  login_contaner: {
+  login_container: {
     flex: 1,
     alignItems: 'center',
     paddingTop: 30,
   },
   loginFields: {
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -393,8 +466,8 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: 'white',
     color: 'black',
-    borderWidth: 1,
-    borderRadius: 2,
+    borderWidth: 3,
+    borderRadius: 5,
     borderColor: '#00A887',
     marginBottom: 15,
 
@@ -412,13 +485,18 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#00A887',
     borderRadius: 5,
-    marginBottom: 15,
 
     shadowOffset: { width: 2, height: 3, },
     shadowColor: 'black',
     shadowOpacity: 0.3,
     shadowRadius: 2.5,
     //elevation: 1, // Android
+  },
+  forgotButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 200,
+    height: 40,
   },
   lgBtnText: {
     fontWeight: 'bold',
@@ -439,11 +517,25 @@ const styles = StyleSheet.create({
     elevation: 6,
 
   },
+  forgotPasswordModal: {
+    marginTop: '5%',
+    borderRadius: 5,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    width: '85%',
+    height: 'auto',
+    paddingTop: 25,
+    paddingBottom: 15,
+
+    elevation: 6,
+  },
   createAccountButtons: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
+    width: '85%',
   },
   createAccountButton: {
     width: '35%',

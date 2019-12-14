@@ -10,24 +10,55 @@ export default class CurrentProjects extends Component {
     super(props)
 
     this.state = {
-      currentProjects: [{ message: "empty" }]
+      refreshing: false,
     };
     this.projects = firebase.firestore().collection('projects');
+    //this.user = this.props.currentUser;
   };
 
+  componentDidMount() {
+
+  }
+
   renderProject = ({ item }) => (
-    <Project project={item} key={item.index} navigation={this.props.navigation}/>
+    <Project
+      project={item}
+      id={item.key}
+      navigation={this.props.navigation}
+      isAuthenticated={this.props.isAuthenticated}
+      getCurrentUser={this.props.getCurrentUser}
+      setCurrentUser={this.props.setCurrentUser}
+    />
   )
 
-  keyExtractor = (item, index) => item.index;
+  keyExtractor = (item) => item.id;
+
+  handleRefresh = () => {
+    this.setState({
+      refreshing: true,
+
+    }, async () => {
+      await this.props.fetchProjects();
+      this.setState({ refreshing: false });
+    })
+  }
+
+  renderEmptyList = () => (
+    <View style={styles.emptyListContainer}>
+      <Text style={styles.emptyListText}>No Projects Available..</Text>
+    </View>
+  )
 
   render() {
     return (
       <View style={styles.container}>
-        <FlatList 
+        <FlatList
           data={this.props.currentProjects}
           renderItem={this.renderProject}
           keyExtractor={this.keyExtractor}
+          refreshing={this.state.refreshing}
+          onRefresh={this.handleRefresh}
+          ListEmptyComponent={this.renderEmptyList}
         />
       </View>
     )
@@ -37,5 +68,15 @@ export default class CurrentProjects extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  emptyListContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyListText: {
+    color: 'gray',
+    fontSize: 17,
+    padding: 20,
   }
 })

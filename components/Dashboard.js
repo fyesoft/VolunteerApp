@@ -25,10 +25,14 @@ export default class Dashboard extends Component {
     super(props)
 
     this.state = {
+      user: {},
+
       isAuthorized: true,
       createModalVisible: false,
       currentProjects: [],
       completedProjects: [],
+      listsRefreshing: false,
+      hoursRefreshing: false,
 
       createdProject: {
         title: "",
@@ -43,6 +47,9 @@ export default class Dashboard extends Component {
       }
     }
 
+    // this.attendingProjects = [];
+    // this.completedProjects = [];
+
     this.emptyProject = {
       title: "",
       summary: "",
@@ -55,49 +62,86 @@ export default class Dashboard extends Component {
       isApproved: true,
     }
     this.projects = firebase.firestore().collection('projects');
+    this.users = firebase.firestore().collection('users');
   }
 
-  componentWillMount() {
+  async componentWillMount() {
     LayoutAnimation.easeInEaseOut();
+
+    await new Promise((resolve) => {
+      this.setState({ user: this.props.getCurrentUser() })
+      resolve();
+    }).then(res => {
+      this.organizeProjects();
+    })
   }
 
   async componentDidMount() {
-    console.log(this.state.currentProjects);
-    this.fetchProjects();
+    //console.log(this.state.currentProjects);
+
+    this.users.doc(this.state.user.id + "").onSnapshot(doc => {
+      this.setState({ user: doc.data() });
+      this.organizeProjects();
+    })
+  }
+
+  async organizeProjects() {
+    let attending = [];
+    let completed = [];
+    await new Promise((resolve) => {
+      //console.log(this.attendingProjects);
+      this.state.user.projects.forEach(project => {
+        //console.log(project);
+        //console.log(new Date(project.end.date));
+        if (new Date(project.end.date) < new Date()) {
+          completed.push(project);
+        } else attending.push(project);
+      })
+      resolve();
+    }).then(res => {
+      this.setState({
+        currentProjects: attending,
+        completedProjects: completed,
+      })
+    })
   }
 
   componentWillUnmount() {
     LayoutAnimation.easeInEaseOut();
   }
 
-  fetchProjects = async () => {
-    let currentProjects = [];
-    let completedProjects = [];
+  // fetchProjects = async () => {
+  //   // let currentProjects = [];
+  //   // let completedProjects = [];
 
-    this.projects.get().then(
-      snapShot => {
-        snapShot.forEach(doc => {
-          //console.log(this.props.user);
-          //console.log(doc.data());
+  //   return await new Promise((resolve) => {
+  //     this.projects.get().then(
+  //       snapShot => {
+  //         snapShot.forEach(doc => {
+  //           //console.log(this.props.user);
+  //           //console.log(doc.data());
 
-          if (this.props.user.completedProjects.includes(doc.data().title))
-            completedProjects.push(doc.data());
+  //           if (this.props.user.completedProjects.includes(doc.data().title))
+  //             this.completedProjects.push(doc.data());
 
-          if (this.props.user.currentProjects.includes(doc.data().title))
-            currentProjects.push(doc.data());
+  //           if (this.props.user.currentProjects.includes(doc.data().title))
+  //             this.attendingProjects.push(doc.data());
 
-          //console.log(completedProjects);
-          //console.log(this.state.completedProjects);
-        });
-        this.setState({
-          completedProjects: completedProjects,
-          currentProjects: currentProjects
-        });
-      }, error => {
-        alert(error.message);
-      }
-    )
-  }
+  //           //console.log(completedProjects);
+  //           //console.log(this.state.completedProjects);
+  //         });
+
+  //         // this.setState({
+  //         //   completedProjects: completedProjects,
+  //         //   currentProjects: currentProjects
+  //         // });
+  //       }, error => {
+  //         alert(error.message);
+  //       }
+  //     )
+  //     resolve("done");
+  //   })
+  // }
 
   onSignOutPress = () => {
     firebase.auth().signOut().then(
@@ -108,10 +152,10 @@ export default class Dashboard extends Component {
     )
   }
 
-  keyExtractor = (item, index) => item.index;
+  keyExtractor = (item) => item.id;
 
-  renderItem = ({ item }) => (
-    <Project project={item} key={item.index}/>
+  renderProject = ({ item }) => (
+    <Project project={item} key={item.key} />
   )
 
   renderCreateButton() {
@@ -130,27 +174,21 @@ export default class Dashboard extends Component {
 
   onCancelPress = () => {
     this.setState({ createModalVisible: false, createdProject: this.emptyProject });
-    console.log(this.state.createModalVisible);
+    //console.log(this.state.createModalVisible);
   }
 
   onConfirmProjectPress = () => {
 
-    // if (
-    //   this.state.createdProject.title.length <= 3 ||
-    //   this.state.createdProject.summary.length <= 10 ||
-    //   this.state.createdProject.dateRange === "" ||
-    //   this.state.createdProject.positions
-    // )
 
     this.projects.add(this.state.createdProject).then(
       () => {
         let tempProjects = this.state.currentProjects;
         tempProjects.push(this.state.createdProject);
-        console.log(this.state.currentProjects);
+        //console.log(this.state.currentProjects);
         this.setState({
           currentProjects: tempProjects,
         });
-        console.log(this.state.currentProjects);
+        //console.log(this.state.currentProjects);
         this.setState({ createModalVisible: false, createdProject: this.emptyProject });
 
       }, (error) => alert(error.message)
@@ -193,13 +231,66 @@ export default class Dashboard extends Component {
     )
   }
 
+  renderLists() {
+    if (this.state.listsLoading) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', }}>
+          <Text>Loading...</Text>
+        </View>
+      )
+    } else {
+      return (
+        <View style={{ flex: 1, }}>
+          <View style={styles.projectLists}>
+            <Text style={[styles.name, { fontSize: 15, }]}>Attending Projects</Text>
+            <FlatList
+              data={this.state.currentProjects}
+              renderItem={this.renderProject}
+              keyExtractor={this.keyExtractor}
+              refreshing={this.state.listsRefreshing}
+              onRefresh={this.handleRefresh}
+            />
+          </View>
+
+          <View style={styles.projectLists}>
+            <Text style={[styles.name, { fontSize: 15, }]}>Completed Projects</Text>
+            <FlatList
+              data={this.state.completedProjects}
+              renderItem={this.renderProject}
+              keyExtractor={this.keyExtractor}
+              refreshing={this.state.listsRefreshing}
+              onRefresh={this.handleRefresh}
+            />
+          </View>
+        </View>
+      )
+    }
+  }
+
+  handleRefresh = () => {
+    this.setState({
+      user: this.props.getCurrentUser(),
+      listsRefreshing: true,
+      hoursRefreshing: true,
+    }), async () => {
+
+      await setTimeout(() => { }, 1500)
+
+      this.setState({
+        user: this.props.getCurrentUser(),
+        listsRefreshing: false,
+        hoursRefreshing: false,
+      })
+    }
+  }
+
   render() {
     return (
       <View style={{ flex: 1 }}>
         <ScrollView style={styles.container}>
 
           <View style={styles.profile}>
-            <Text style={styles.name}>{this.props.user.name}</Text>
+            <Text style={styles.name}>{this.state.user.name}</Text>
             <TouchableOpacity
               style={styles.signOutButton}
               onPress={this.onSignOutPress}>
@@ -210,36 +301,24 @@ export default class Dashboard extends Component {
             <Text style={[styles.name, { fontSize: 15, }]}>Volunteer Experience</Text>
             <View style={styles.hours}>
               <Text style={styles.hoursText}>Hours:</Text>
-              <Text style={styles.hoursText}>{this.props.user.hours} Hours and {this.props.user.minutes} Minutes</Text>
+              <Text style={styles.hoursText}>{this.state.user.hours} Hours and {this.state.user.minutes} Minutes</Text>
+            </View>
+            <View style={styles.hours}>
+              <Text style={styles.hoursText}>Preferred Positions:</Text>
+              <Text style={styles.hoursText}>placeholder</Text>
             </View>
           </View>
 
           {this.renderCreateButton()}
 
-          <View style={styles.volunteerExp}>
-            <Text style={[styles.name, { fontSize: 15, }]}>Completed Projects</Text>
-            <FlatList
-              data={this.state.completedProjects}
-              renderItem={this.renderItem}
-              keyExtractor={this.keyExtractor}
-              ref='myList'
-            />
-          </View>
+          {this.renderLists()}
 
-          <View style={styles.volunteerExp}>
-            <Text style={[styles.name, { fontSize: 15, }]}>Attending Projects</Text>
-            <FlatList
-              data={this.state.currentProjects}
-              renderItem={this.renderItem}
-              keyExtractor={this.keyExtractor}
-              ref='myList'
-            />
-          </View>
         </ScrollView>
       </View>
     )
   }
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -278,6 +357,13 @@ const styles = StyleSheet.create({
   },
   volunteerExp: {
     width: '100%',
+    flexDirection: 'column',
+    padding: 15,
+  },
+  projectLists: {
+    width: '100%',
+    flex: 1,
+    maxHeight: 300,
     flexDirection: 'column',
     padding: 15,
   },

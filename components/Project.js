@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native'
+import Image from 'react-native-image-progress';
+import * as Progress from 'react-native-progress';
 
 export default class Project extends Component {
     constructor(props) {
@@ -8,19 +10,28 @@ export default class Project extends Component {
         this.state = {
 
         };
+        //console.log(this.props.currentUser);
     };
-
 
     render() {
         return (
 
-            <TouchableOpacity style={styles.container} onPress={
-                () => this.props.navigation.navigate('Project', {project: this.props.project})
+            <TouchableOpacity key={this.props.id} style={styles.container} onPress={
+                () => this.props.navigation.navigate('Project',
+                    {
+                        project: this.props.project,
+                        id: this.props.id,
+                        isAuthenticated: this.props.isAuthenticated,
+                        getCurrentUser: this.props.getCurrentUser,
+                        setCurrentUser: this.props.setCurrentUser
+                    }
+                )
             }>
                 <View style={styles.image_container}>
                     <Image
                         style={{ width: 100, height: 100 }}
                         source={this.props.project.img_url}
+                        indicator={Progress.ProgressBar}
                     />
                 </View>
                 <View style={styles.details_container}>
