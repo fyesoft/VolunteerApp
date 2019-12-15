@@ -37,8 +37,10 @@
     "typescript": "^3.7.3"
   },
   "devDependencies": {
+    "@types/firebase": "^3.2.1",
     "babel-preset-expo": "^5.0.0",
-    "jest-expo": "^32.0.0"
+    "jest-expo": "^32.0.0",
+    "react-native-typescript-transformer": "^1.2.13"
   },
   "private": true
 }

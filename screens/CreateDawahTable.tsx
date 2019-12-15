@@ -11,6 +11,7 @@ import {
     Alert
 } from 'react-native';
 
+
 export class CreateDawahTable extends Component {
     constructor(props) {
         super(props);
@@ -22,6 +23,10 @@ export class CreateDawahTable extends Component {
     render(): React.ReactNode {
         return(
             <ScrollView style={styles.container}>
+                <View style={styles.titleBar}>
+                    <Button title="Back" onPress={()=> this.props.navigation.goBack()}/>
+                </View>
+
             </ScrollView>
         );
     }

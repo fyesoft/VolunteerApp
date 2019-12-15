@@ -10,9 +10,19 @@ import DrawerNavigator from './navigation/DrawerNavigator';
 import * as firebase from 'firebase';
 import ApiKeys from './constants/ApiKeys';
 
-export default class App extends React.Component {
+interface Props {
+  skipLoadingScreen: boolean;
+}
 
-  constructor(props) {
+interface State {
+    isLoadingComplete: boolean;
+    isAuthenticationReady: boolean;
+    isAuthenticated: boolean;
+}
+
+export default class App extends React.Component<Props, State> {
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       isLoadingComplete: false,
@@ -25,7 +35,7 @@ export default class App extends React.Component {
     firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
   }
 
-  onAuthStateChanged = (user) => {
+  onAuthStateChanged = (user: firebase.User | null): any => {
     this.setState({ isAuthenticationReady: true, isAuthenticated: !!user });
   }
 
@@ -48,7 +58,7 @@ export default class App extends React.Component {
     }
   }
 
-  _loadResourcesAsync = async () => {
+  _loadResourcesAsync = async (): Promise<void> => {
     return Promise.all([
       Asset.loadAsync([
         require('./assets/images/robot-dev.png'),
@@ -61,10 +71,10 @@ export default class App extends React.Component {
         // to remove this if you are not using it in your app
         'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
       }),
-    ]);
+    ]) as any;
   };
 
-  _handleLoadingError = error => {
+  _handleLoadingError = (error: any) => {
     // In this case, you might want to report the error to your error
     // reporting service, for example Sentry
     console.warn(error);
