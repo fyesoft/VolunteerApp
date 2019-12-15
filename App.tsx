@@ -2,7 +2,7 @@ import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { Asset } from 'expo-asset';
 import * as Font from 'expo-font';
-import { Icon } from '@expo/vector-icons';
+import Icon from '@expo/vector-icons';
 import { AppLoading } from 'expo';
 
 import DrawerNavigator from './navigation/DrawerNavigator';

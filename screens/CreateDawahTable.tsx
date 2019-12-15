@@ -8,12 +8,22 @@ import {
     TouchableOpacity,
     FlatList,
     Modal,
-    Alert
+    Alert,
+    
 } from 'react-native';
 
+import createStackedNavigator, { NavigationContainer } from "react-navigation"
 
-export class CreateDawahTable extends Component {
-    constructor(props) {
+export interface Props {
+    navigation: NavigationContainer;
+}
+
+interface State {
+
+}
+
+export class CreateDawahTable extends Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.state = {
 

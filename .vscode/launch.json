@@ -8,8 +8,8 @@
             "name": "Debug in Exponent",
             "cwd": "${workspaceFolder}",
             "type": "reactnative",
-            "request": "launch",
-            "platform": "exponent"
+            "request": "attach",
+            "port": "19001"
         }
     ]
 }
