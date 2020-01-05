@@ -1,50 +1,164 @@
 import React,{ Component } from 'react';
+import ScreenBar from "../components/ScreenBar";
+import { DrawerActions } from 'react-navigation';
+
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
+    TextInput,
+    Picker,
     Button,
     TouchableOpacity,
     FlatList,
     Modal,
-    Alert,
-    
+    Alert
 } from 'react-native';
 
+import { TabView, TabBar, Route, SceneRendererProps } from "react-native-tab-view";
+import DateTimePicker, { Event } from "@react-native-community/datetimepicker";
 import createStackedNavigator, { NavigationContainer } from "react-navigation"
 
 export interface Props {
     navigation: NavigationContainer;
 }
+const repeatOptions = ["Every Day", "Every Week", "Every Weekend", "Every Weekday", "Every Two Weeks", "Every Month"];
 
 interface State {
-
+    location: string
+    tabViewState: {
+        index: number,
+        routes: Array<Route>
+    },
+    firstOccurence: Date;
+    repeats: typeof repeatOptions[number];
+    tableType: "once" | "recurring";
 }
 
-export class CreateDawahTable extends Component<Props, State> {
+export default class CreateDawahTable extends Component<Props, State> {
+
     constructor(props: Props) {
         super(props);
         this.state = {
-
+            location: "",
+            tabViewState: {
+                index: 0,
+                routes: [
+                    { key: "recurring", title: "Recurring"},
+                    { key: "once", title: "Once"},
+                ]
+            },
+            firstOccurence: new Date(),
+            repeats: "Every Week",
+            tableType: "recurring",
         }
     }
 
-    render(): React.ReactNode {
-        return(
-            <ScrollView style={styles.container}>
-                <View style={styles.titleBar}>
-                    <Button title="Back" onPress={()=> this.props.navigation.goBack()}/>
+    _renderTabView = (props: SceneRendererProps & { route: Route; }): React.ReactNode => {
+        switch(props.route.key) {
+            case "recurring":
+                return <View style={styles.container}>
+                    <Text style={styles.positionText}>
+                        First Occurence
+                    </Text>
+                    <DateTimePicker
+                        value={this.state.firstOccurence}
+                        mode="datetime"
+                        onChange={this._onFirstOccurenceChanged}
+                    />
+                    <Text style={styles.positionText}>
+                        Repeats every
+                    </Text>
+                    <Picker
+                        selectedValue={this.state.repeats}
+                        onValueChange={this._onRepeatsValueChange}
+                        {...repeatOptions.map((value: string) => {
+                            return (<Picker.Item label={value} value={value}/>);
+                        })}
+                    />
+                    
                 </View>
+            case "once":
+                return <View style={styles.container}>
+                    <Text style={styles.positionText}>
+                        When
+                    </Text>
+                    <DateTimePicker
+                        value={this.state.firstOccurence}
+                        mode="datetime"
+                        onChange={this._onFirstOccurenceChanged}
+                    />
+                </View>
+        }
+    }
 
-            </ScrollView>
-        );
+    _onFirstOccurenceChanged = (event: Event, date?: Date) => {
+        this.state.firstOccurence = date || new Date();
+    }
+
+    _onRepeatsValueChange = (value: string, index: number) => {
+        this.state.repeats = value;
+    }
+
+    _onTabIndexChange = () => {
+
+    }
+    render(): React.ReactNode {
+        return (
+            <View style={styles.container}>
+                <ScreenBar onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())} title={'Create Dawah Table'} />
+                <ScrollView contentContainerStyle={{justifyContent: "center", alignItems: "center"}}>
+                    <TextInput
+                        value={this.state.location}
+                        onChangeText={(text) => this.setState({ location: text })}
+                        autoCapitalize='none'
+                        autoCorrect={false}
+                        placeholder="Location"
+                        style={styles.textInput}
+                    />
+                    <TabView
+                        navigationState={this.state.tabViewState}
+                        renderScene={this._renderTabView}
+                        renderTabBar={ props => 
+                        <TabBar
+                            {...props}
+                            indicatorStyle={{backgroundColor: 'black'}}
+                            style={{
+                                backgroundColor: 'white',
+                                shadowOffset: { width: 0, height: 1},
+                                shadowColor: 'black',
+                                shadowOpacity: 0.4,
+                                shadowRadius: 8,
+                            }}
+                            labelStyle={{
+                                color: 'black',
+                                fontSize: 13,
+                                fontWeight: 'bold'
+                            }}
+                        />}
+                        onIndexChange={this._onTabIndexChange}
+                        tabBarPosition='top'
+                    />
+
+                    <TextInput
+                        value={this.state.location}
+                        onChangeText={(text) => this.setState({ location: text })}
+                        autoCapitalize='none'
+                        autoCorrect={false}
+                        placeholder="Schedule"
+                        style={styles.textInput}
+                    />
+                </ScrollView>
+            </View>
+        )
     }
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+
     },
     titleBar: {
         flexDirection: 'row',
@@ -57,6 +171,30 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         top: 0,
+    },
+    loadingModal: {
+        backgroundColor: 'black',
+        opacity: 0.75,
+        height: 100,
+        width: 200,
+        borderRadius: 50,
+    },
+    textInput: {
+        textAlign: 'center',
+        width: 300,
+        height: 50,
+        backgroundColor: 'white',
+        color: 'black',
+        borderWidth: 3,
+        borderRadius: 5,
+        borderColor: '#00A887',
+        marginBottom: 15,
+    
+        shadowOffset: { width: 1, height: 2, },
+        shadowColor: 'black',
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        //elevation: 1, // Android
     },
     title: {
         fontWeight: 'bold',

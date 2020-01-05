@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import { 
     View,
-    ScrollView,
+    Button,
     Text,
-    StyleSheet,
+    StyleSheet
 } from "react-native";
-
+import { DrawerActions } from "react-navigation";
+import ScreenBar from "../components/ScreenBar";
 import MapView, { Region } from "react-native-maps";
 
 export interface Props {
@@ -23,6 +24,7 @@ export default class DawahTablesScreen extends Component<Props, State> {
     render(): React.ReactNode {
         return (
             <View style={styles.container}>
+                <ScreenBar onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())} title={'Create Dawah Table'} />
                 <Text style={styles.mapTitle}>Dawah Tables</Text>
                 <MapView 
                     style={{flex: 1}}
@@ -50,7 +52,11 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         backgroundColor: 'white',
     },
-
+    backButton: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+    },
     mapTitle: {
         fontSize: 20,
         fontWeight: 'bold',

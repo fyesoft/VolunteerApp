@@ -9,6 +9,7 @@ import VolunteerScreen from '../screens/VolunteerScreen';
 import CreateProjectScreen from '../screens/CreateProjectScreen';
 import ProjectScreen from '../screens/ProjectScreen';
 import DawahTablesScreen from '../screens/DawahTablesScreen';
+import CreateDawahTable from '../screens/CreateDawahTable';
 
 const VolunteerNavigator = createStackNavigator({
     Volunteer: { screen: VolunteerScreen },
@@ -32,7 +33,8 @@ const MyDrawerNavigator = createDrawerNavigator({
     Donate: { screen: DonateScreen },
     Videos: { screen: VideosScreen },
     Volunteer: { screen: VolunteerNavigator },
-    DawahTables: { screen: DawahTablesScreen }
+    "Create Dawah Table": { screen: CreateDawahTable },
+    "Dawah Tables": { screen: DawahTablesScreen }
 
 }, {
         initialRouteName: 'Home',
